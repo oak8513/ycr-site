@@ -4,6 +4,9 @@ publish_post.py — Git commit and push for York Computer Repair site.
 Stages all changes in the ycr-site repo, commits, and pushes to GitHub Pages.
 GitHub Pages auto-deploys within ~30 seconds of push.
 
+Posts are now Jekyll-based: written to _posts/YYYY-MM-DD-{slug}.html
+and auto-listed by Jekyll via site.posts — no blog/index.html update needed.
+
 Usage:
     python publish_post.py "SEO: add post on laptop screen repair"
     python publish_post.py          # uses default message

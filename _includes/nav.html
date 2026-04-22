@@ -1,0 +1,17 @@
+<nav class="bg-ycr-blue sticky top-0 z-50 shadow-lg">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <a href="/" class="flex items-center gap-2 text-white leading-none">
+      <img src="/assets/logo.png" alt="York Computer Repair logo" class="h-10 w-auto">
+      <span class="font-impact text-2xl tracking-wide">York Computer Repair</span>
+    </a>
+    <div class="hidden md:flex items-center space-x-6 font-heading font-semibold text-white text-sm">
+      <a href="/" {% if page.url == "/" %}class="border-b-2 border-white pb-0.5"{% else %}class="hover:text-ycr-gray transition"{% endif %}>Home</a>
+      <a href="/services.html" {% if page.url == "/services.html" %}class="border-b-2 border-white pb-0.5"{% else %}class="hover:text-ycr-gray transition"{% endif %}>Services</a>
+      <a href="/about.html" {% if page.url == "/about.html" %}class="border-b-2 border-white pb-0.5"{% else %}class="hover:text-ycr-gray transition"{% endif %}>About</a>
+      <a href="/contact.html" {% if page.url == "/contact.html" %}class="border-b-2 border-white pb-0.5"{% else %}class="hover:text-ycr-gray transition"{% endif %}>Contact</a>
+      <a href="/blog/" {% if page.url contains "/blog" %}class="border-b-2 border-white pb-0.5"{% else %}class="hover:text-ycr-gray transition"{% endif %}>Blog</a>
+      <a href="https://yorkcomputer.net" target="_blank" rel="noopener" class="flex items-center gap-1 bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-heading font-bold transition">YorkComputer.net <span>&#8599;</span></a>
+    </div>
+    <a href="tel:7177399675" class="bg-ycr-orange hover:bg-orange-700 text-white px-5 py-2 rounded font-heading font-bold text-sm transition">Call 717-739-9675</a>
+  </div>
+</nav>

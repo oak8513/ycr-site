@@ -1,0 +1,5 @@
+title: York Computer Repair
+description: Expert laptop and PC repair in York, PA.
+url: "https://oakhem.com"
+baseurl: ""
+permalink: /blog/:title.html
