@@ -280,9 +280,18 @@ def build_listing_card(post: dict, pub_date: str) -> str:
 def update_blog_index(card_html: str) -> None:
     content = BLOG_INDEX.read_text(encoding="utf-8")
 
-    # Remove the "coming soon" placeholder if still present
+    # Remove the "coming soon" placeholder block if still present
+    # Match from the outer div opening to the line containing "Articles coming soon"
+    # and everything up to the next </div> after it
     content = re.sub(
-        r"\s*<div class=\"text-center py-16 text-ycr-steel\">.*?</div>\s*",
+        r"\s*<div[^>]*text-center py-16[^>]*>.*?Articles coming soon.*?</p>\s*</div>\s*",
+        "\n",
+        content,
+        flags=re.DOTALL,
+    )
+    # Also strip any orphaned "coming soon" paragraphs left over from partial removal
+    content = re.sub(
+        r"\s*<p[^>]*>Articles coming soon</p>\s*<p[^>]*>.*?</p>\s*</div>\s*",
         "\n",
         content,
         flags=re.DOTALL,
