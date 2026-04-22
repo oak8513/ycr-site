@@ -125,7 +125,7 @@ FOOTER = """\
     <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
       <div><div class="font-impact text-white text-xl mb-3">York Computer Repair</div><p class="text-sm text-gray-400 leading-relaxed">Your trusted local computer repair shop in York, PA.</p></div>
       <div><h4 class="font-heading font-semibold text-white mb-3">Contact</h4><p class="text-sm">2069 Carlisle Rd<br>York, PA 17408</p><p class="text-sm mt-2"><a href="tel:7177399675" class="hover:text-white">717-739-9675</a></p></div>
-      <div><h4 class="font-heading font-semibold text-white mb-3">Hours</h4><p class="text-sm">Mon&ndash;Fri: 9:00 AM &ndash; 5:00 PM</p><p class="text-sm">Saturday: 10:00 AM &ndash; 3:00 PM</p><p class="text-sm text-gray-500">Sunday: Closed</p></div>
+      <div><h4 class="font-heading font-semibold text-white mb-3">Hours</h4><p class="text-sm">Mon&ndash;Fri: 9:00 AM &ndash; 5:00 PM</p><p class="text-sm text-gray-500">Saturday: Closed</p><p class="text-sm text-gray-500">Sunday: Closed</p></div>
     </div>
     <div class="max-w-6xl mx-auto mt-8 pt-6 border-t border-gray-700 flex flex-col md:flex-row justify-between text-xs text-gray-500">
       <p>&copy; 2026 York Computer Repair. All rights reserved.</p>
@@ -351,7 +351,7 @@ def main(dry_run: bool = False) -> int:
         return 1
 
     slug     = post["slug"]
-    filename = f"{today}-{slug}.html"
+    filename = f"{slug}.html"
     filepath = BLOG_DIR / filename
     url      = f"https://oakhem.com/blog/{filename}"
     log.info("Post slug: %s | File: %s", slug, filename)
