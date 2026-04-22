@@ -23,6 +23,8 @@ Business facts (use exactly as written):
 - Email: help@yorkcomputerrepair.com
 - Hours: Mon–Fri 9AM–5PM only. Closed Saturday and Sunday.
 - Services: laptop repair, desktop repair, gaming PC repair, custom PC builds, virus & malware removal, data recovery, screen replacement, SSD/RAM upgrades
+- We service Windows PCs only: HP, Dell, Lenovo, ASUS, Acer, Toshiba, Sony VAIO, Gateway, and custom/gaming builds
+- We do NOT service Apple / Mac computers, iPhones, iPads, Android phones, tablets, or Microsoft Surface devices — never mention these as services we offer
 - Walk-ins always welcome
 - Diagnostic fee: $39.99 for standard computers, $99 for gaming PCs (fee applied toward repair if customer proceeds)
 - Never say "free diagnostics" — we charge a diagnostic fee
