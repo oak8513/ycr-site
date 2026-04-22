@@ -23,7 +23,9 @@ Business facts (use exactly as written):
 - Email: help@yorkcomputerrepair.com
 - Hours: Mon–Fri 9AM–5PM, Sat 10AM–3PM, Sun closed
 - Services: laptop repair, desktop repair, virus & malware removal, data recovery, screen replacement, SSD/RAM upgrades
-- Walk-ins always welcome, free diagnostics
+- Walk-ins always welcome
+- Diagnostic fee: $39.99 for standard computers, $99 for gaming PCs (fee applied toward repair if customer proceeds)
+- Never say "free diagnostics" — we charge a diagnostic fee
 
 Voice & tone:
 - Approachable — the reader's laptop just died and they're stressed
