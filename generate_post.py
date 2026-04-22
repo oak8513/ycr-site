@@ -21,8 +21,8 @@ Business facts (use exactly as written):
 - Address: 2069 Carlisle Rd, York, PA 17408
 - Phone: 717-739-9675
 - Email: help@yorkcomputerrepair.com
-- Hours: Mon–Fri 9AM–5PM, Sat 10AM–3PM, Sun closed
-- Services: laptop repair, desktop repair, virus & malware removal, data recovery, screen replacement, SSD/RAM upgrades
+- Hours: Mon–Fri 9AM–5PM only. Closed Saturday and Sunday.
+- Services: laptop repair, desktop repair, gaming PC repair, custom PC builds, virus & malware removal, data recovery, screen replacement, SSD/RAM upgrades
 - Walk-ins always welcome
 - Diagnostic fee: $39.99 for standard computers, $99 for gaming PCs (fee applied toward repair if customer proceeds)
 - Never say "free diagnostics" — we charge a diagnostic fee
