@@ -172,7 +172,7 @@ def render_jekyll_post(data: dict, post_date: str) -> str:
     Content only — no DOCTYPE/html/head/nav/footer (provided by _layouts/default.html).
     """
     slug = data["slug"]
-    canonical = f"https://oakhem.com/blog/{slug}.html"
+    canonical = f"https://yorkcomputerrepair.com/blog/{slug}.html"
 
     front_matter = f"""---
 layout: default

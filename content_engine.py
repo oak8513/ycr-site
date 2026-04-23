@@ -176,11 +176,11 @@ def build_post_html(post: dict, pub_date: str) -> str:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title_esc} | York Computer Repair</title>
   <meta name="description" content="{meta_esc}">
-  <link rel="canonical" href="https://oakhem.com/blog/{slug}.html">
+  <link rel="canonical" href="https://yorkcomputerrepair.com/blog/{slug}.html">
   <meta property="og:type" content="article">
   <meta property="og:title" content="{title_esc}">
   <meta property="og:description" content="{meta_esc}">
-  <meta property="og:url" content="https://oakhem.com/blog/{slug}.html">
+  <meta property="og:url" content="https://yorkcomputerrepair.com/blog/{slug}.html">
   <meta property="article:published_time" content="{pub_date}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -353,7 +353,7 @@ def main(dry_run: bool = False) -> int:
     slug     = post["slug"]
     filename = f"{slug}.html"
     filepath = BLOG_DIR / filename
-    url      = f"https://oakhem.com/blog/{filename}"
+    url      = f"https://yorkcomputerrepair.com/blog/{filename}"
     log.info("Post slug: %s | File: %s", slug, filename)
 
     # 3. Build and save HTML
