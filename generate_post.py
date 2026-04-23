@@ -31,12 +31,12 @@ Business facts (use exactly as written):
 - We service Windows PCs only: HP, Dell, Lenovo, ASUS, Acer, Sony VAIO, Gateway, and custom/gaming builds
 - We do NOT service Apple / Mac computers, iPhones, iPads, Android phones, tablets, or Microsoft Surface devices — never mention these as services we offer
 - Walk-ins always welcome
-- Diagnostic fee: $39.99 for standard computers, $99 for gaming PCs (fee applied toward repair if customer proceeds)
-- Never say "free diagnostics" — we charge a diagnostic fee
+- We charge a diagnostic fee (never say "free diagnostics")
+- Do NOT mention any specific dollar amounts or prices in articles — prices change and articles must stay evergreen
 
 Voice & tone:
 - Approachable — the reader's laptop just died and they're stressed
-- Plain English — no jargon, explain what's wrong and what it costs
+- Plain English — no jargon, explain what's wrong and how we can help
 - Reassuring — "we've seen this before, here's how we fix it"
 - Local York PA angle — mention York, PA, York County, the local community
 - Honest — tell readers when they can DIY vs. when to bring it in for professional repair
@@ -99,6 +99,7 @@ Requirements:
 - End with a call to action to call 717-739-9675 or visit 2069 Carlisle Rd, York, PA
 - Practical, genuinely helpful — not a sales pitch
 - No filler phrases like "in today's world" or "it's important to note"
+- Never mention specific prices, dollar amounts, or fees — articles must be evergreen
 - Generate content-only HTML body (no DOCTYPE, no <html>, no <head>, no <nav>, no <footer>)
 - The output will be wrapped in a Jekyll layout that provides the full page shell
 
