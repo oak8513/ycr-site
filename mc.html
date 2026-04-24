@@ -1,0 +1,166 @@
+---
+layout: default
+title: "Maintenance Check Up | York Computer Repair"
+description: "Internal maintenance checklist."
+permalink: /mc/
+---
+
+<style>
+    .mc-embedded {
+        padding: 20px;
+    }
+    .mc-embedded .mc-title {
+        text-align: left;
+        font-size: 28px;
+        font-weight: bold;
+        color: #3d3d3d;
+        margin: 20px;
+    }
+    .mc-embedded .mc-container {
+        margin: 20px;
+    }
+    .mc-table-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: minmax(120px, auto);
+        gap: 10px;
+        width: 100%;
+    }
+    .mc-cell {
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        text-align: center;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        page-break-inside: avoid;
+    }
+    .mc-cell h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+        color: inherit;
+    }
+    .mc-cell p {
+        font-size: 13px;
+        margin-top: 8px;
+    }
+    .mc-red    { background-color: #ff4c4c; color: white; }
+    .mc-yellow { background-color: #ffcc00; color: black; }
+    .mc-green  { background-color: #4caf50; color: white; }
+    .mc-yellow h3 { color: black; }
+    @media (max-width: 768px) {
+        .mc-table-container { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media print {
+        body { -webkit-print-color-adjust: exact; }
+        .mc-cell { border: 1px solid #000; page-break-inside: avoid; }
+    }
+</style>
+
+<div class="mc-embedded">
+    <div class="mc-title">Maintenance Check Up</div>
+    <div class="mc-container">
+        <div class="mc-table-container" id="mc-grid">
+            <div class="mc-cell mc-green">
+                <h3>Hard Drive Health</h3>
+                Monitoring sector health and temperatures to prevent drive failure.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Hard Drive Speeds</h3>
+                Checking read and write speeds in MBs per second to ensure performance.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>RAM Quantity</h3>
+                Assessing if the system has sufficient RAM for optimal performance.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>3rd Party Updates</h3>
+                Ensuring all 3rd party software is updated to mitigate security vulnerabilities.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Windows Updates</h3>
+                Verifying the installation of the latest Windows updates for security and stability.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Firmware/Bios Updates</h3>
+                Checking if firmware and BIOS are up-to-date to ensure hardware compatibility and security.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Security Status</h3>
+                Evaluating the overall security measures implemented across the system.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Internet Speed Check</h3>
+                Measuring current internet speeds to identify potential network issues.
+            </div>
+            <div class="mc-cell mc-red">
+                <h3>Managed Service Plan</h3>
+                Reviewing the current managed service plan to ensure all devices are covered.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Clean Fans and Case (Desktop Only)</h3>
+                Verifying that desktop fans and case are clean to prevent overheating.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Malicious Browser Extensions</h3>
+                Identifying and removing potentially harmful browser extensions.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>PUPS</h3>
+                Scanning for and removing unwanted programs.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>SFC Scan</h3>
+                Running System File Checker (SFC) to repair corrupted system files.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Reliability History Check</h3>
+                Reviewing system reliability history to identify and resolve recurring issues.
+            </div>
+            <div class="mc-cell mc-yellow">
+                <h3>Next Gen Antivirus</h3>
+                Ensuring a next-generation antivirus is installed and up-to-date for advanced threat protection.
+            </div>
+            <div class="mc-cell mc-red">
+                <h3>Remote Session Blocking</h3>
+                Ensuring valid support software is not used maliciously.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>CPU Usage</h3>
+                Reviewing CPU usage and temperatures.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>GPU Usage</h3>
+                Reviewing GPU usage and temperatures.
+            </div>
+            <div class="mc-cell mc-green">
+                <h3>Disk Usage</h3>
+                Reviewing Disk usage and temperatures.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const cycle = ['mc-green', 'mc-yellow', 'mc-red'];
+    const labels = {
+        'mc-green':  'Good: This area is properly implemented and functional.',
+        'mc-yellow': 'Needs Attention: Service or feature requires further investigation.',
+        'mc-red':    'Lacking: This service or feature needs to be addressed.'
+    };
+
+    document.querySelectorAll('.mc-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+            const current = cycle.find(c => cell.classList.contains(c));
+            const next = cycle[(cycle.indexOf(current) + 1) % cycle.length];
+            cell.classList.remove(current);
+            cell.classList.add(next);
+            const existing = cell.querySelector('p');
+            if (existing) existing.remove();
+            const p = document.createElement('p');
+            p.textContent = labels[next];
+            cell.appendChild(p);
+        });
+    });
+</script>
