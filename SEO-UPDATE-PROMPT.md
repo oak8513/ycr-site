@@ -33,7 +33,7 @@ Business info:
 - **Name:** York Computer Repair
 - **Address:** 2069 Carlisle Rd, York, PA 17408
 - **Phone:** 717-739-9675
-- **Hours:** Monday–Saturday 9 AM–6 PM (confirm from about.html or contact.html)
+- **Hours:** Monday–Friday 9 AM–5 PM. Closed Saturday and Sunday.
 - **URL:** https://yorkcomputerrepair.com
 - **Services:** Windows laptop repair, desktop/PC repair, virus & malware removal,
   data recovery, laptop screen replacement, SSD/RAM upgrades, computer tune-up,
@@ -96,9 +96,9 @@ Inside `<head>` or just before `</body>`, add a `<script type="application/ld+js
   "openingHoursSpecification": [
     {
       "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
       "opens": "09:00",
-      "closes": "18:00"
+      "closes": "17:00"
     }
   ],
   "priceRange": "$$",
