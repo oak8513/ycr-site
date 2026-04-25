@@ -7,8 +7,15 @@
   </url>
   <url>
     <loc>https://yorkcomputerrepair.com/services.html</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://yorkcomputerrepair.com/services/laptop-repair.html</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://yorkcomputerrepair.com/about.html</loc>
