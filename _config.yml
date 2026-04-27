@@ -3,3 +3,10 @@ description: Expert laptop and PC repair in York, PA.
 url: "https://yorkcomputerrepair.com"
 baseurl: ""
 permalink: /blog/:title.html
+
+defaults:
+  - scope:
+      path: "blog"
+    values:
+      layout: default
+      is_blog_post: true

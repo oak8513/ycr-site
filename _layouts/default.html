@@ -42,6 +42,94 @@
       }
     }
   </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": "https://yorkcomputerrepair.com/#localbusiness",
+    "name": "York Computer Repair",
+    "url": "https://yorkcomputerrepair.com",
+    "telephone": "+17177399675",
+    "email": "help@yorkcomputerrepair.com",
+    "priceRange": "$$",
+    "image": "https://yorkcomputerrepair.com/assets/storefront.jpg",
+    "description": "Expert laptop and PC repair in York, PA. Virus removal, data recovery, screen replacement, SSD upgrades, and more. Walk-ins welcome.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "2069 Carlisle Rd",
+      "addressLocality": "York",
+      "addressRegion": "PA",
+      "postalCode": "17408",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 39.9526,
+      "longitude": -76.7277
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+        "opens": "09:00",
+        "closes": "17:00"
+      }
+    ],
+    "areaServed": [
+      {"@type": "City", "name": "York, PA"},
+      {"@type": "City", "name": "Shiloh, PA"},
+      {"@type": "City", "name": "Spring Grove, PA"},
+      {"@type": "City", "name": "Hanover, PA"}
+    ],
+    "sameAs": [
+      "https://www.google.com/maps?cid=york-computer-repair"
+    ]
+  }
+  </script>
+
+  {% if page.service %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": {{ page.service | jsonify }},
+    "url": {{ page.canonical | default: page.url | jsonify }},
+    "serviceType": {{ page.service_type | default: page.service | jsonify }},
+    "description": {{ page.description | jsonify }},
+    "areaServed": {"@type": "City", "name": "York, PA"},
+    "provider": {"@id": "https://yorkcomputerrepair.com/#localbusiness"}
+  }
+  </script>
+  {% endif %}
+
+  {% if page.is_blog_post %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": {{ page.title | jsonify }},
+    "description": {{ page.description | jsonify }},
+    "url": {{ page.canonical | default: page.url | jsonify }},
+    "image": "https://yorkcomputerrepair.com/assets/storefront.jpg",
+    "datePublished": "{{ page.date | default: site.time | date: '%Y-%m-%d' }}",
+    "dateModified": "{{ page.last_modified_at | default: page.date | default: site.time | date: '%Y-%m-%d' }}",
+    "author": {"@type": "Organization", "name": "York Computer Repair"},
+    "publisher": {
+      "@type": "Organization",
+      "name": "York Computer Repair",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://yorkcomputerrepair.com/assets/storefront.jpg"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": {{ page.canonical | default: page.url | jsonify }}
+    }
+  }
+  </script>
+  {% endif %}
 </head>
 <body class="font-sans bg-ycr-white text-ycr-black">
   {% include nav.html %}
