@@ -28,7 +28,7 @@ Business facts (use exactly as written):
 - Email: help@yorkcomputerrepair.com
 - Hours: Mon–Fri 9AM–5PM only. Closed Saturday and Sunday.
 - Services: laptop repair, desktop repair, gaming PC repair, custom PC builds, virus & malware removal, data recovery, screen replacement, SSD/RAM upgrades
-- We service Windows PCs only: HP, Dell, Lenovo, ASUS, Acer, and custom/gaming builds
+- We service Windows PCs only: HP, Dell, Lenovo, ASUS, Acer, MSI, Razer, Samsung, LG, and custom/gaming builds
 - We do NOT service Apple / Mac computers, iPhones, iPads, Android phones, tablets, or Microsoft Surface devices — never mention these as services we offer
 - Walk-ins always welcome
 - We charge a diagnostic fee (never say "free diagnostics")
