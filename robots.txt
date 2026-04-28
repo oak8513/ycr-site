@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /quote/
 Allow: /
 
-Sitemap: https://oakhem.com/sitemap.xml
+Sitemap: https://yorkcomputerrepair.com/sitemap.xml
