@@ -1,0 +1,1269 @@
+<!--
+  YCR Repair Quote — FormSpree-wired version
+
+  SETUP (one-time):
+    1. Create a FormSpree form at https://formspree.io/forms/new
+    2. Copy your form ID (looks like "xpzgkwer")
+    3. Replace YOUR_FORM_ID inside FORMSPREE_ENDPOINT in the <script> at the bottom
+    4. In your FormSpree dashboard, set the notification email to wherever
+       you want quote responses delivered
+    5. (Optional) FormSpree free tier limits: 50 submissions/month. Upgrade if needed.
+
+  CONFIG VARS (top of <script> at bottom of file):
+    FORMSPREE_ENDPOINT — your FormSpree URL
+    LABOR_RATE         — hourly labor rate in dollars (currently $125)
+
+  URL PARAMS (the USB tool generates these per customer):
+    name        — customer name
+    ticket      — ticket ID (shown in header + email subject)
+    device      — device make/model
+    tech        — technician name
+    notes       — technician notes paragraph
+    items       — repair line items, format:  "Description~Hours|Description~Hours"
+                  Example: "Malware cleanup~1.5|Software updates~0.5"
+    diag        — diagnostic results, format: "Name~Detail~Status|Name~Detail~Status"
+                  Status must be one of: good, warn, bad
+                  Example: "Hard Drive~SMART clean, 87% life~good|RAM~Upgrade recommended~warn"
+    turnaround  — turnaround time string (e.g. "Same-day pickup")
+
+  SAMPLE TEST URL (open in browser to verify pre-fill works):
+    Repair%20Quote.html?name=Sarah%20Mitchell&ticket=YCR-2026-0428&device=Dell%20XPS%2015%20(9520)&tech=Marcus%20T.&notes=Hardware%20looks%20great.%20Slowdowns%20are%20from%20malware.&items=Malware%20removal%20%26%20cleanup~1.5%7CSoftware%20updates%20%26%20Windows%20patches~0.5&diag=Hard%20Drive%20Health~SMART%20clean%2C%2087%25%20life%20remaining~good%7CInstalled%20RAM~8%20GB%2C%20upgrade%20recommended~warn%7CMalware%20Scan~3%20active%20threats%20found~bad&turnaround=Same-day%20pickup
+
+  NOTE: Special characters in URL params must be URL-encoded:
+    space  -> %20      |  | -> %7C      ~ -> ~ (no encoding needed)
+    &      -> %26      $   -> %24       %  -> %25
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<title>Your Computer Diagnostic Report — York Computer Repair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ycr-blue: #1e7fc4;
+    --ycr-blue-deep: #0f5a92;
+    --ycr-blue-dark: #0a3a61;
+    --ycr-blue-soft: #e8f3fb;
+    --ink: #0c1b2a;
+    --ink-2: #2b3d50;
+    --muted: #6b7e92;
+    --line: #e3ecf3;
+    --bg: #f4f7fa;
+    --card: #ffffff;
+    --good: #1aa260;
+    --good-bg: #e6f7ee;
+    --warn: #d98a00;
+    --warn-bg: #fff5e0;
+    --bad:  #d63a3a;
+    --bad-bg: #fde8e8;
+    --shadow: 0 1px 2px rgba(12,27,42,.04), 0 8px 24px rgba(12,27,42,.06);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+  }
+  .brand-text {
+    line-height: 1.15;
+  }
+  .brand-name {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    color: var(--ycr-blue-dark);
+  }
+  .brand-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .ticket {
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .ticket strong {
+    display: block;
+    color: var(--ink-2);
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(135deg, var(--ycr-blue-dark) 0%, var(--ycr-blue-deep) 60%, var(--ycr-blue) 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 28px 28px 26px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,.12) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.8;
+    margin-bottom: 10px;
+  }
+  .hero h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .hero p {
+    margin: 0;
+    opacity: 0.88;
+    font-size: 15px;
+    max-width: 540px;
+  }
+  .hero-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,.18);
+  }
+  .hero-meta-item .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    opacity: 0.7;
+    margin-bottom: 4px;
+  }
+  .hero-meta-item .value {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ---------- Section ---------- */
+  .section {
+    margin-top: 28px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin: 0 0 12px;
+    padding-left: 4px;
+  }
+
+  /* ---------- Diagnostic items ---------- */
+  .diag-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .diag-item {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .diag-item:last-child { border-bottom: 0; }
+
+  .status-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 800;
+  }
+  .status-icon svg {
+    width: 20px; height: 20px;
+  }
+  .status-good { background: var(--good-bg); color: var(--good); }
+  .status-warn { background: var(--warn-bg); color: var(--warn); }
+  .status-bad  { background: var(--bad-bg);  color: var(--bad);  }
+
+  .diag-text .name {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .diag-text .detail {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .pill {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .pill.good { background: var(--good-bg); color: var(--good); }
+  .pill.warn { background: var(--warn-bg); color: var(--warn); }
+  .pill.bad  { background: var(--bad-bg);  color: var(--bad);  }
+
+  /* ---------- Tech notes ---------- */
+  .notes-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--ycr-blue);
+  }
+  .notes-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .notes-head .who {
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .notes-head .role {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--ycr-blue-soft);
+    color: var(--ycr-blue-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .notes-body {
+    font-size: 14.5px;
+    color: var(--ink-2);
+    white-space: pre-line;
+  }
+
+  /* ---------- Estimate ---------- */
+  .estimate {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .estimate-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+  }
+  .estimate-row.total {
+    border-top: 1px dashed var(--line);
+    padding-top: 16px;
+    margin-top: 6px;
+  }
+  .estimate-row .label {
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .estimate-row .value {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .estimate-row.total .label { font-weight: 700; font-size: 15px; }
+  .estimate-row.total .value {
+    font-size: 22px;
+    color: var(--ycr-blue-deep);
+  }
+  .estimate-note {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ---------- MSP recommendation ---------- */
+  .msp-card {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(30,127,196,.18) 0%, rgba(30,127,196,0) 55%),
+      linear-gradient(180deg, #ffffff 0%, #f6fbfe 100%);
+    border: 1px solid #cfe3f3;
+    border-radius: var(--radius);
+    padding: 24px 24px 22px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .msp-badge {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--ycr-blue) 0%, var(--ycr-blue-deep) 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(15,90,146,.25);
+  }
+  .msp-body { min-width: 0; }
+  .msp-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ycr-blue-deep);
+    margin-bottom: 4px;
+  }
+  .msp-body h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .msp-body > p {
+    margin: 0 0 14px;
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .msp-perks {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 18px;
+  }
+  .msp-perks li {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .perk-check {
+    color: var(--good);
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .msp-price {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .price-amt {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--ycr-blue-deep);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .price-amt .from {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .price-amt .dollar {
+    font-size: 18px;
+    vertical-align: top;
+    margin-right: 1px;
+  }
+  .price-amt .per {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-left: 2px;
+  }
+  .price-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .msp-optin {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    background: #fafbfc;
+    transition: border-color .15s, background .15s;
+  }
+  .msp-optin:has(input:checked) {
+    border-color: var(--ycr-blue);
+    background: var(--ycr-blue-soft);
+  }
+  .msp-optin input {
+    width: 18px; height: 18px;
+    margin: 2px 0 0;
+    accent-color: var(--ycr-blue-deep);
+    flex-shrink: 0;
+  }
+  .msp-optin-text strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .msp-optin-text span {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ---------- Decision panel ---------- */
+  .decision {
+    margin-top: 32px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 26px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .decision h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .decision .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 22px;
+  }
+
+  .choice-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .choice {
+    position: relative;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 14px;
+    cursor: pointer;
+    background: #fff;
+    text-align: center;
+    transition: all .15s ease;
+    user-select: none;
+  }
+  .choice:hover {
+    border-color: var(--ycr-blue);
+    transform: translateY(-1px);
+  }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice .icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .choice.approve .icon { background: var(--good-bg); color: var(--good); }
+  .choice.decline .icon { background: var(--bad-bg); color: var(--bad); }
+  .choice .label {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  .choice .sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .choice.selected.approve {
+    border-color: var(--good);
+    background: var(--good-bg);
+  }
+  .choice.selected.decline {
+    border-color: var(--bad);
+    background: var(--bad-bg);
+  }
+
+  .field {
+    text-align: left;
+    margin-bottom: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 14px;
+    background: #fafbfc;
+    color: var(--ink);
+    transition: border-color .15s, background .15s;
+  }
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--ycr-blue);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(30,127,196,.15);
+  }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .submit {
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--ycr-blue-deep);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: background .15s, transform .05s;
+    font-family: inherit;
+  }
+  .submit:hover { background: var(--ycr-blue-dark); }
+  .submit:active { transform: scale(0.995); }
+  .submit:disabled { background: #9bb1c4; cursor: not-allowed; }
+
+  .disclaimer {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    margin-top: 36px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+  .foot a { color: var(--ycr-blue-deep); text-decoration: none; font-weight: 600; }
+  .foot a:hover { text-decoration: underline; }
+
+  /* ---------- Confirmation state ---------- */
+  .confirmation {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .confirmation.show { display: block; }
+  .confirmation .check {
+    width: 64px; height: 64px;
+    margin: 0 auto 16px;
+    background: var(--good-bg);
+    color: var(--good);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .confirmation h2 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  .confirmation p {
+    color: var(--muted);
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 560px) {
+    .page { padding: 20px 14px 60px; }
+    .hero { padding: 22px 20px; }
+    .hero h1 { font-size: 22px; }
+    .hero-meta { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .diag-item { grid-template-columns: 36px 1fr; padding: 14px 16px; }
+    .diag-item .pill { grid-column: 2; justify-self: start; margin-top: 4px; }
+    .msp-card { grid-template-columns: 1fr; padding: 20px; }
+    .msp-perks { grid-template-columns: 1fr; }
+    .choice-row { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+    .topbar { flex-wrap: wrap; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">
+      <img src="assets/logo.png" alt="YCR shield logo" />
+      <div class="brand-text">
+        <div class="brand-name">York Computer Repair</div>
+        <div class="brand-sub">Diagnostic & Service Report</div>
+      </div>
+    </div>
+    <div class="ticket">
+      <strong>Ticket #YCR-2026-0428</strong>
+      Apr 28, 2026
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">Service Recommendation</div>
+    <h1>Hi Sarah — here's what we found on your PC.</h1>
+    <p>Our technician has finished the diagnostic. Below is a summary of each system we checked, plus our recommended repair. Take a look and let us know how you'd like to proceed.</p>
+
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <div class="label">Customer</div>
+        <div class="value">Sarah Mitchell</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">Device</div>
+        <div class="value">Dell XPS 15 (9520)</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">Technician</div>
+        <div class="value">Marcus T.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Diagnostic results -->
+  <section class="section">
+    <h3 class="section-title">Diagnostic Results</h3>
+    <div class="diag-card">
+
+      <div class="diag-item">
+        <div class="status-icon status-good" aria-label="Good">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">Hard Drive Health</div>
+          <div class="detail">SMART data is clean. Estimated 87% life remaining — no signs of imminent failure.</div>
+        </div>
+        <span class="pill good">Healthy</span>
+      </div>
+
+      <div class="diag-item">
+        <div class="status-icon status-good" aria-label="Good">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">Hard Drive Free Space</div>
+          <div class="detail">487 GB free of 1 TB (49% available). Plenty of headroom for updates and backups.</div>
+        </div>
+        <span class="pill good">Healthy</span>
+      </div>
+
+      <div class="diag-item">
+        <div class="status-icon status-warn" aria-label="Attention needed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">Installed RAM</div>
+          <div class="detail">8 GB DDR4 installed. Running at 78% utilization during normal use — an upgrade to 16 GB would noticeably improve performance.</div>
+        </div>
+        <span class="pill warn">Attention</span>
+      </div>
+
+      <div class="diag-item">
+        <div class="status-icon status-bad" aria-label="Action needed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">Malware Scan</div>
+          <div class="detail">3 active threats detected, including a browser hijacker and adware. Removal recommended.</div>
+        </div>
+        <span class="pill bad">Action Needed</span>
+      </div>
+
+      <div class="diag-item">
+        <div class="status-icon status-warn" aria-label="Attention needed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">3rd-Party Programs</div>
+          <div class="detail">7 programs are out of date, including Chrome, Adobe Reader, and Zoom.</div>
+        </div>
+        <span class="pill warn">Attention</span>
+      </div>
+
+      <div class="diag-item">
+        <div class="status-icon status-warn" aria-label="Attention needed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">Windows Security Patches</div>
+          <div class="detail">2 critical updates pending from the last 60 days.</div>
+        </div>
+        <span class="pill warn">Attention</span>
+      </div>
+
+      <div class="diag-item">
+        <div class="status-icon status-good" aria-label="Good">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">Cooling & Fan Speeds</div>
+          <div class="detail">CPU fan and chassis fans operating in normal range. Temps idle at 42°C.</div>
+        </div>
+        <span class="pill good">Healthy</span>
+      </div>
+
+      <div class="diag-item">
+        <div class="status-icon status-bad" aria-label="Action needed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="diag-text">
+          <div class="name">Dark Web Exposure</div>
+          <div class="detail">Your email was found in 4 known data breaches, including a 2024 leak that exposed passwords. We recommend a password reset and enabling two-factor authentication.</div>
+        </div>
+        <span class="pill bad">Action Needed</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MSP recommendation -->
+  <section class="section">
+    <h3 class="section-title">Recommended Next Step</h3>
+    <div class="msp-card">
+      <div class="msp-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="msp-body">
+        <div class="msp-eyebrow">Stay protected · YCR Managed Care</div>
+        <h3>Let us watch your PC so this doesn't happen again.</h3>
+        <p>Most of the issues we found today — outdated software, missed Windows updates, malware sneaking in, leaked passwords — are exactly what our <strong>Managed Care plan</strong> prevents. We monitor 24/7, patch automatically, run antivirus, and alert you the moment your email shows up in a new breach.</p>
+        <ul class="msp-perks">
+          <li><span class="perk-check">✓</span> Automatic Windows & 3rd-party patching</li>
+          <li><span class="perk-check">✓</span> Real-time antivirus & malware monitoring</li>
+          <li><span class="perk-check">✓</span> Ongoing dark web monitoring for your accounts</li>
+          <li><span class="perk-check">✓</span> Priority support &mdash; skip the queue when you call</li>
+        </ul>
+        <div class="msp-price">
+          <div class="price-amt"><span class="from">From</span><span class="dollar">$</span>49<span class="per">/mo</span></div>
+          <div class="price-sub">Residential plans · No contract · Cancel anytime</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech notes -->
+  <section class="section">
+    <h3 class="section-title">Technician Notes</h3>
+    <div class="notes-card">
+      <div class="notes-head">
+        <div class="avatar">MT</div>
+        <div>
+          <div class="who">Marcus T.</div>
+          <div class="role">Senior Technician</div>
+        </div>
+      </div>
+      <div class="notes-body">Your hardware is in great shape — no concerns there. The slowdowns you described are coming from the malware infection and the backlog of software updates. Once we clean those up and reinstall a clean copy of your browser, you should see the system feel like new again. I'd recommend handling the security updates while we have it on the bench so you don't have to wait through them at home.</div>
+    </div>
+  </section>
+
+  <!-- Estimate -->
+  <section class="section">
+    <h3 class="section-title">Recommended Repair</h3>
+    <div class="estimate">
+      <div class="estimate-row">
+        <div class="label">Labor — Malware removal & system cleanup</div>
+        <div class="value">1.5 hr</div>
+      </div>
+      <div class="estimate-row">
+        <div class="label">Labor — Software updates & Windows patches</div>
+        <div class="value">0.5 hr</div>
+      </div>
+      <div class="estimate-row total">
+        <div class="label">Total estimate · 2.0 labor hours @ $95/hr</div>
+        <div class="value">$190.00</div>
+      </div>
+      <div class="estimate-note">Estimate covers labor only. If we discover anything additional during repair, we'll contact you before continuing. Diagnostic fee is waived if you approve the repair.</div>
+    </div>
+  </section>
+
+  <!-- Decision form -->
+  <section class="decision" id="decisionPanel">
+    <h2>Your decision</h2>
+    <div class="sub">Choose an option below — we'll get started as soon as you submit.</div>
+
+    <form id="quoteForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+
+      <!-- Hidden context Formspree will receive -->
+      <input type="hidden" name="_subject" value="Repair quote response — Ticket #YCR-2026-0428" />
+      <input type="hidden" name="ticket_id" value="YCR-2026-0428" />
+      <input type="hidden" name="customer_name" value="Sarah Mitchell" />
+      <input type="hidden" name="device" value="Dell XPS 15 (9520)" />
+      <input type="hidden" name="technician" value="Marcus T." />
+      <input type="hidden" name="quote_total" value="$190.00" />
+      <input type="hidden" name="labor_hours" value="2.0" />
+      <input type="hidden" name="msp_interest" id="mspHidden" value="No" />
+
+      <div class="choice-row">
+        <label class="choice approve" data-choice="approve">
+          <input type="radio" name="decision" value="APPROVED" required />
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="label">Approve repair</div>
+          <p class="sub">Go ahead with the recommended work.</p>
+        </label>
+
+        <label class="choice decline" data-choice="decline">
+          <input type="radio" name="decision" value="DECLINED" required />
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div class="label">Decline for now</div>
+          <p class="sub">I'll pass on the repair this time.</p>
+        </label>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="email">Your email</label>
+          <input id="email" type="email" name="email" placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label for="phone">Phone (optional)</label>
+          <input id="phone" type="tel" name="phone" placeholder="(717) 555-0123" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="customer_notes">Notes for the technician (optional)</label>
+        <textarea id="customer_notes" name="customer_notes" placeholder="Want to change something about this quote? Have questions or scheduling preferences? Tell us here and we'll get back to you before starting any work."></textarea>
+      </div>
+
+      <label class="msp-optin" for="mspCheck">
+        <input id="mspCheck" type="checkbox" />
+        <div class="msp-optin-text">
+          <strong>Yes, tell me more about Managed Care (from $49/mo).</strong>
+          <span>We'll include details and a quick sign-up link with your confirmation email.</span>
+        </div>
+      </label>
+
+      <div id="formError" style="display:none; background:var(--bad-bg); color:var(--bad); border:1px solid var(--bad); border-radius:10px; padding:12px 14px; font-size:13.5px; font-weight:600; text-align:left; margin-bottom:14px;"></div>
+
+      <button type="submit" class="submit" id="submitBtn">Submit response</button>
+
+      <div class="disclaimer">
+        By submitting, you authorize York Computer Repair to perform the work described above (if approved). You can reach us anytime at <strong>(717) 739-9675</strong>.
+      </div>
+    </form>
+  </section>
+
+  <!-- Confirmation -->
+  <section class="confirmation" id="confirmation">
+    <div class="check">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 id="confirmTitle">Thanks — we got it.</h2>
+    <p id="confirmBody">We'll follow up shortly with next steps. You'll also get a copy of this response by email.</p>
+  </section>
+
+  <div class="foot">
+    York Computer Repair · York, PA · (717) 739-9675<br/>
+    Questions? Reply to this email or visit <a href="#">yorkcomputerrepair.com</a>
+  </div>
+
+</div>
+
+<script>
+  // ============================================================
+  // === CONFIGURATION — UPDATE THESE TWO VALUES =================
+  // ============================================================
+  const FORMSPREE_ENDPOINT = "https://formspree.io/f/xrerwwlb"; // YCR Repair Estimate form
+  const LABOR_RATE = 125; // dollars per labor hour
+  // ============================================================
+
+  // ---------- SVG icons for diagnostic status ----------
+  const SVG_GOOD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const SVG_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
+  const SVG_BAD  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+  const STATUS_META = {
+    good: { icon: SVG_GOOD, iconClass: 'status-good', pillClass: 'good', pillText: 'Healthy',       aria: 'Good' },
+    warn: { icon: SVG_WARN, iconClass: 'status-warn', pillClass: 'warn', pillText: 'Attention',     aria: 'Attention needed' },
+    bad:  { icon: SVG_BAD,  iconClass: 'status-bad',  pillClass: 'bad',  pillText: 'Action Needed', aria: 'Action needed' }
+  };
+
+  // ---------- URL param parsing ----------
+  const params = new URLSearchParams(window.location.search);
+
+  // Parse "Desc~Hours|Desc~Hours" into [{description, hours}]
+  function parseItems(raw) {
+    if (!raw) return null;
+    return raw.split('|').map(row => {
+      const parts = row.split('~');
+      const description = (parts[0] || '').trim();
+      const hours = parseFloat(parts[1]);
+      return description ? { description, hours: isNaN(hours) ? 0 : hours } : null;
+    }).filter(Boolean);
+  }
+
+  // Parse "Name~Detail~Status|Name~Detail~Status" into [{name, detail, status}]
+  function parseDiag(raw) {
+    if (!raw) return null;
+    return raw.split('|').map(row => {
+      const parts = row.split('~');
+      const name = (parts[0] || '').trim();
+      const detail = (parts[1] || '').trim();
+      const status = ((parts[2] || 'good').trim().toLowerCase());
+      const safeStatus = STATUS_META[status] ? status : 'good';
+      return name ? { name, detail, status: safeStatus } : null;
+    }).filter(Boolean);
+  }
+
+  function fmtMoney(n) {
+    return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- Pre-fill text content from URL ----------
+  const customerName = params.get('name');
+  const ticketId     = params.get('ticket');
+  const deviceName   = params.get('device');
+  const techName     = params.get('tech');
+  const techNotes    = params.get('notes');
+  const turnaround   = params.get('turnaround');
+
+  if (customerName) {
+    // Hero greeting: replace first name (or full if no space)
+    const firstName = customerName.split(' ')[0];
+    const heroH1 = document.querySelector('.hero h1');
+    if (heroH1) heroH1.textContent = `Hi ${firstName} — here's what we found on your PC.`;
+    // Hero meta tile + hidden field
+    const customerTile = document.querySelectorAll('.hero-meta-item .value')[0];
+    if (customerTile) customerTile.textContent = customerName;
+    const customerHidden = document.querySelector('input[name="customer_name"]');
+    if (customerHidden) customerHidden.value = customerName;
+  }
+
+  if (ticketId) {
+    const ticketEl = document.querySelector('.ticket strong');
+    if (ticketEl) ticketEl.textContent = `Ticket #${ticketId}`;
+    const ticketHidden = document.querySelector('input[name="ticket_id"]');
+    if (ticketHidden) ticketHidden.value = ticketId;
+    const subjectHidden = document.querySelector('input[name="_subject"]');
+    if (subjectHidden) subjectHidden.value = `Repair quote response — Ticket #${ticketId}`;
+  }
+
+  if (deviceName) {
+    const deviceTile = document.querySelectorAll('.hero-meta-item .value')[1];
+    if (deviceTile) deviceTile.textContent = deviceName;
+    const deviceHidden = document.querySelector('input[name="device"]');
+    if (deviceHidden) deviceHidden.value = deviceName;
+  }
+
+  if (techName) {
+    const techTile = document.querySelectorAll('.hero-meta-item .value')[2];
+    if (techTile) techTile.textContent = techName;
+    const techHidden = document.querySelector('input[name="technician"]');
+    if (techHidden) techHidden.value = techName;
+    // Notes-card author
+    const notesAuthor = document.querySelector('.notes-head .who');
+    if (notesAuthor) notesAuthor.textContent = techName;
+    // Avatar initials
+    const avatar = document.querySelector('.notes-head .avatar');
+    if (avatar) {
+      const initials = techName.split(/\s+/).map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+      if (initials) avatar.textContent = initials;
+    }
+  }
+
+  if (techNotes) {
+    const notesBody = document.querySelector('.notes-body');
+    if (notesBody) notesBody.textContent = techNotes;
+  }
+
+  // ---------- Render diagnostic items from URL ----------
+  const diagItems = parseDiag(params.get('diag'));
+  if (diagItems && diagItems.length > 0) {
+    const diagCard = document.querySelector('.diag-card');
+    if (diagCard) {
+      diagCard.innerHTML = diagItems.map(d => {
+        const meta = STATUS_META[d.status];
+        return `
+          <div class="diag-item">
+            <div class="status-icon ${meta.iconClass}" aria-label="${meta.aria}">${meta.icon}</div>
+            <div class="diag-text">
+              <div class="name">${escapeHtml(d.name)}</div>
+              <div class="detail">${escapeHtml(d.detail)}</div>
+            </div>
+            <span class="pill ${meta.pillClass}">${meta.pillText}</span>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // ---------- Render repair line items + total ----------
+  const lineItems = parseItems(params.get('items')) || [];
+  let totalHours = 0;
+  let totalDollars = 0;
+
+  if (lineItems.length > 0) {
+    const estimate = document.querySelector('.estimate');
+    const totalRow = estimate.querySelector('.estimate-row.total');
+    const note     = estimate.querySelector('.estimate-note');
+
+    // Remove all existing non-total rows
+    estimate.querySelectorAll('.estimate-row:not(.total)').forEach(r => r.remove());
+
+    // Insert one row per line item, before the total
+    lineItems.forEach(item => {
+      totalHours += item.hours;
+      const row = document.createElement('div');
+      row.className = 'estimate-row';
+      row.innerHTML = `
+        <div class="label">${escapeHtml(item.description)}</div>
+        <div class="value">${item.hours.toFixed(1)} hr</div>
+      `;
+      estimate.insertBefore(row, totalRow);
+    });
+
+    totalDollars = totalHours * LABOR_RATE;
+
+    // Update total row
+    totalRow.querySelector('.label').textContent = `Total estimate · ${totalHours.toFixed(1)} labor hours @ $${LABOR_RATE}/hr`;
+    totalRow.querySelector('.value').textContent = fmtMoney(totalDollars);
+
+    // Push to hidden fields
+    const totalHidden = document.querySelector('input[name="quote_total"]');
+    const hoursHidden = document.querySelector('input[name="labor_hours"]');
+    if (totalHidden) totalHidden.value = fmtMoney(totalDollars);
+    if (hoursHidden) hoursHidden.value = totalHours.toFixed(1);
+
+    // Turnaround prepended to estimate-note if provided
+    if (turnaround && note) {
+      note.innerHTML = `<strong>Turnaround:</strong> ${escapeHtml(turnaround)}. ` + note.innerHTML;
+    }
+  } else if (turnaround) {
+    // No items but turnaround provided — still show it
+    const note = document.querySelector('.estimate-note');
+    if (note) note.innerHTML = `<strong>Turnaround:</strong> ${escapeHtml(turnaround)}. ` + note.innerHTML;
+  }
+
+  // ---------- MSP opt-in checkbox -> hidden form field ----------
+  const mspCheck = document.getElementById('mspCheck');
+  const mspHidden = document.getElementById('mspHidden');
+  if (mspCheck && mspHidden) {
+    mspCheck.addEventListener('change', () => {
+      mspHidden.value = mspCheck.checked ? 'Yes' : 'No';
+    });
+  }
+
+  // ---------- Choice card visual selection ----------
+  const choices = document.querySelectorAll('.choice');
+  choices.forEach(c => {
+    c.addEventListener('click', () => {
+      choices.forEach(x => x.classList.remove('selected'));
+      c.classList.add('selected');
+      c.querySelector('input').checked = true;
+      hideError();
+    });
+  });
+
+  // ---------- Submit handling ----------
+  const form = document.getElementById('quoteForm');
+  const decisionPanel = document.getElementById('decisionPanel');
+  const confirmation = document.getElementById('confirmation');
+  const submitBtn = document.getElementById('submitBtn');
+  const formError = document.getElementById('formError');
+
+  function showError(msg) {
+    formError.textContent = msg;
+    formError.style.display = 'block';
+    formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function hideError() {
+    formError.style.display = 'none';
+    formError.textContent = '';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError();
+
+    // ---- Validation ----
+    const decision = form.querySelector('input[name="decision"]:checked');
+    if (!decision) {
+      showError('Please choose Approve or Decline before submitting.');
+      return;
+    }
+
+    const customerNameVal = (document.querySelector('input[name="customer_name"]').value || '').trim();
+    if (!customerNameVal) {
+      showError('Customer name is missing from this quote link. Please contact us at (717) 739-9675 so we can resend it.');
+      return;
+    }
+
+    if (lineItems.length === 0) {
+      showError('This quote has no line items yet. Please contact us at (717) 739-9675 so we can resend the link.');
+      return;
+    }
+
+    const emailVal = (document.getElementById('email').value || '').trim();
+    if (!emailVal) {
+      showError('Please enter your email address.');
+      return;
+    }
+
+    // ---- Build submission payload ----
+    const fd = new FormData(form);
+    // Add computed line item fields
+    fd.set('items_summary', lineItems.map(i => `${i.description} (${i.hours.toFixed(1)}hr)`).join(' · '));
+    lineItems.forEach((i, idx) => {
+      const dollars = i.hours * LABOR_RATE;
+      fd.set(`item_${idx + 1}`, `${i.description} — ${i.hours.toFixed(1)} hr — ${fmtMoney(dollars)}`);
+    });
+    if (techNotes) fd.set('tech_notes', techNotes);
+    if (turnaround) fd.set('turnaround', turnaround);
+    if (diagItems && diagItems.length > 0) {
+      fd.set('diagnostic_summary', diagItems.map(d => `${d.name}: ${STATUS_META[d.status].pillText}`).join(' · '));
+    }
+
+    // ---- If endpoint is still placeholder, simulate success so the file previews standalone ----
+    const isPlaceholder = FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID');
+    if (isPlaceholder) {
+      console.log('[FormSpree placeholder] Submission would have included:', Object.fromEntries(fd.entries()));
+      showConfirmation(decision.value);
+      return;
+    }
+
+    // ---- Real FormSpree submission ----
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    try {
+      const res = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        body: fd,
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        showConfirmation(decision.value);
+      } else {
+        throw new Error('Submission failed (' + res.status + ')');
+      }
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit response';
+      showError("Couldn't send your response. Please try again, or call us at (717) 739-9675.");
+    }
+  });
+
+  function showConfirmation(value) {
+    decisionPanel.style.display = 'none';
+    confirmation.classList.add('show');
+    if (value === 'APPROVED') {
+      document.getElementById('confirmTitle').textContent = "Repair approved — thank you!";
+      document.getElementById('confirmBody').textContent = "We'll get started right away and reach out as soon as your computer is ready for pickup.";
+    } else {
+      document.getElementById('confirmTitle').textContent = "Got it — no repair this time.";
+      document.getElementById('confirmBody').textContent = "Your response has been recorded. Your device will be ready for pickup as-is. If you change your mind, just give us a call.";
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
