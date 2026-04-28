@@ -15,6 +15,8 @@
 
   URL PARAMS (the USB tool generates these per customer):
     name        — customer name
+    email       — customer email (pre-fills the form's email input)
+    phone       — customer phone (pre-fills the form's phone input)
     ticket      — ticket ID (shown in header + email subject)
     device      — device make/model
     tech        — technician name
@@ -1019,12 +1021,23 @@
   }
 
   // ---------- Pre-fill text content from URL ----------
-  const customerName = params.get('name');
-  const ticketId     = params.get('ticket');
-  const deviceName   = params.get('device');
-  const techName     = params.get('tech');
-  const techNotes    = params.get('notes');
-  const turnaround   = params.get('turnaround');
+  const customerName  = params.get('name');
+  const customerEmail = params.get('email');
+  const customerPhone = params.get('phone');
+  const ticketId      = params.get('ticket');
+  const deviceName    = params.get('device');
+  const techName      = params.get('tech');
+  const techNotes     = params.get('notes');
+  const turnaround    = params.get('turnaround');
+
+  if (customerEmail) {
+    const emailInput = document.getElementById('email');
+    if (emailInput) emailInput.value = customerEmail;
+  }
+  if (customerPhone) {
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) phoneInput.value = customerPhone;
+  }
 
   if (customerName) {
     // Hero greeting: replace first name (or full if no space)
