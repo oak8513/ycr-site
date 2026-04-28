@@ -21,8 +21,11 @@
     device      — device make/model
     tech        — technician name
     notes       — technician notes paragraph
-    items       — repair line items, format:  "Description~Hours|Description~Hours"
-                  Example: "Malware cleanup~1.5|Software updates~0.5"
+    items       — repair line items, format:  "Description~Hours~Price|..."
+                  Hours is labor (multiplied by $125/hr). Price is parts (flat charge).
+                  Either can be 0 (need at least one >0 per row).
+                  Example: "Malware cleanup~1.5~0|RAM upgrade~0.5~80|Power supply~0~95"
+                  Backward compat: 2-element rows (no price) still work.
     diag        — diagnostic results, format: "Name~Detail~Status|Name~Detail~Status"
                   Status must be one of: good, warn, bad
                   Example: "Hard Drive~SMART clean, 87% life~good|RAM~Upgrade recommended~warn"
@@ -988,14 +991,20 @@
   // ---------- URL param parsing ----------
   const params = new URLSearchParams(window.location.search);
 
-  // Parse "Desc~Hours|Desc~Hours" into [{description, hours}]
+  // Parse "Desc~Hours~Price|Desc~Hours~Price" into [{description, hours, price}].
+  // Backward-compatible with 2-element rows ("Desc~Hours") which assume price=0.
   function parseItems(raw) {
     if (!raw) return null;
     return raw.split('|').map(row => {
       const parts = row.split('~');
       const description = (parts[0] || '').trim();
       const hours = parseFloat(parts[1]);
-      return description ? { description, hours: isNaN(hours) ? 0 : hours } : null;
+      const price = parseFloat(parts[2]);
+      return description ? {
+        description,
+        hours: isNaN(hours) ? 0 : hours,
+        price: isNaN(price) ? 0 : price,
+      } : null;
     }).filter(Boolean);
   }
 
@@ -1112,6 +1121,7 @@
   // ---------- Render repair line items + total ----------
   const lineItems = parseItems(params.get('items')) || [];
   let totalHours = 0;
+  let totalParts = 0;
   let totalDollars = 0;
 
   if (lineItems.length > 0) {
@@ -1122,22 +1132,44 @@
     // Remove all existing non-total rows
     estimate.querySelectorAll('.estimate-row:not(.total)').forEach(r => r.remove());
 
-    // Insert one row per line item, before the total
+    // Insert one row per line item, before the total.
+    // Right-side label varies based on what the row charges for:
+    //   hours only      -> "X.X hr"
+    //   parts only      -> "$X.XX (parts)"
+    //   hours + parts   -> "X.X hr + $X.XX parts"
     lineItems.forEach(item => {
       totalHours += item.hours;
+      totalParts += item.price;
+      let rightLabel;
+      if (item.hours > 0 && item.price > 0) {
+        rightLabel = `${item.hours.toFixed(1)} hr + ${fmtMoney(item.price)} parts`;
+      } else if (item.price > 0) {
+        rightLabel = `${fmtMoney(item.price)} (parts)`;
+      } else {
+        rightLabel = `${item.hours.toFixed(1)} hr`;
+      }
       const row = document.createElement('div');
       row.className = 'estimate-row';
       row.innerHTML = `
         <div class="label">${escapeHtml(item.description)}</div>
-        <div class="value">${item.hours.toFixed(1)} hr</div>
+        <div class="value">${rightLabel}</div>
       `;
       estimate.insertBefore(row, totalRow);
     });
 
-    totalDollars = totalHours * LABOR_RATE;
+    const laborDollars = totalHours * LABOR_RATE;
+    totalDollars = laborDollars + totalParts;
 
-    // Update total row
-    totalRow.querySelector('.label').textContent = `Total estimate · ${totalHours.toFixed(1)} labor hours @ $${LABOR_RATE}/hr`;
+    // Update total row label based on what was charged
+    let totalLabel;
+    if (totalHours > 0 && totalParts > 0) {
+      totalLabel = `Total · ${totalHours.toFixed(1)} hr labor (${fmtMoney(laborDollars)}) + ${fmtMoney(totalParts)} parts`;
+    } else if (totalParts > 0) {
+      totalLabel = `Total · parts`;
+    } else {
+      totalLabel = `Total estimate · ${totalHours.toFixed(1)} labor hours @ $${LABOR_RATE}/hr`;
+    }
+    totalRow.querySelector('.label').textContent = totalLabel;
     totalRow.querySelector('.value').textContent = fmtMoney(totalDollars);
 
     // Push to hidden fields
@@ -1223,11 +1255,21 @@
 
     // ---- Build submission payload ----
     const fd = new FormData(form);
-    // Add computed line item fields
-    fd.set('items_summary', lineItems.map(i => `${i.description} (${i.hours.toFixed(1)}hr)`).join(' · '));
+    // Format a line item for human-readable summary fields
+    function itemLabel(i) {
+      const parts = [];
+      if (i.hours > 0) parts.push(`${i.hours.toFixed(1)}hr`);
+      if (i.price > 0) parts.push(`${fmtMoney(i.price)} parts`);
+      return `${i.description} (${parts.join(' + ') || 'no charge'})`;
+    }
+    fd.set('items_summary', lineItems.map(itemLabel).join(' · '));
     lineItems.forEach((i, idx) => {
-      const dollars = i.hours * LABOR_RATE;
-      fd.set(`item_${idx + 1}`, `${i.description} — ${i.hours.toFixed(1)} hr — ${fmtMoney(dollars)}`);
+      const labor = i.hours * LABOR_RATE;
+      const rowTotal = labor + i.price;
+      const breakdown = [];
+      if (i.hours > 0) breakdown.push(`${i.hours.toFixed(1)} hr labor (${fmtMoney(labor)})`);
+      if (i.price > 0) breakdown.push(`${fmtMoney(i.price)} parts`);
+      fd.set(`item_${idx + 1}`, `${i.description} — ${breakdown.join(' + ')} — total ${fmtMoney(rowTotal)}`);
     });
     if (techNotes) fd.set('tech_notes', techNotes);
     if (turnaround) fd.set('turnaround', turnaround);
