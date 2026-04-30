@@ -975,6 +975,10 @@
   // ============================================================
   const FORMSPREE_ENDPOINT = "https://formspree.io/f/xrerwwlb"; // YCR Repair Estimate form
   const LABOR_RATE = 125; // dollars per labor hour
+  // Optional: Zapier Catch Hook that fans out a Google Chat DM to the assigned tech.
+  // Fire-and-forget — FormSpree remains the source of truth. Set to "" or leave the
+  // YOUR_HOOK_ID placeholder to disable.
+  const CHAT_NOTIFY_WEBHOOK = "https://hooks.zapier.com/hooks/catch/12118363/uvreki9/";
   // ============================================================
 
   // ---------- SVG icons for diagnostic status ----------
@@ -1283,6 +1287,19 @@
       console.log('[FormSpree placeholder] Submission would have included:', Object.fromEntries(fd.entries()));
       showConfirmation(decision.value);
       return;
+    }
+
+    // ---- Fire-and-forget Chat DM notification to assigned tech (parallel) ----
+    // FormSpree below is the source of truth; if the Chat hook is slow/down, the
+    // customer's confirmation is unaffected.
+    if (CHAT_NOTIFY_WEBHOOK && !CHAT_NOTIFY_WEBHOOK.includes('YOUR_HOOK_ID')) {
+      try {
+        fetch(CHAT_NOTIFY_WEBHOOK, {
+          method: 'POST',
+          body: fd,
+          headers: { 'Accept': 'application/json' }
+        }).catch(() => { /* silent — tech misses DM, FormSpree still captures */ });
+      } catch (_) { /* ignore */ }
     }
 
     // ---- Real FormSpree submission ----
