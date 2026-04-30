@@ -878,7 +878,7 @@
         <div class="label">Total estimate · 2.0 labor hours @ $95/hr</div>
         <div class="value">$190.00</div>
       </div>
-      <div class="estimate-note">Estimate covers labor only. If we discover anything additional during repair, we'll contact you before continuing. Diagnostic fee is waived if you approve the repair.</div>
+      <div class="estimate-note">Estimate covers labor only. If we discover anything additional during repair, we'll contact you before continuing.</div>
     </div>
   </section>
 
@@ -975,6 +975,7 @@
   // ============================================================
   const FORMSPREE_ENDPOINT = "https://formspree.io/f/xrerwwlb"; // YCR Repair Estimate form
   const LABOR_RATE = 125; // dollars per labor hour
+  const SALES_TAX_RATE = 0.06; // PA sales tax — applied to parts only (labor is not taxed)
   // Optional: Zapier Catch Hook that fans out a Google Chat DM to the assigned tech.
   // Fire-and-forget — FormSpree remains the source of truth. Set to "" or leave the
   // YOUR_HOOK_ID placeholder to disable.
@@ -1162,14 +1163,26 @@
     });
 
     const laborDollars = totalHours * LABOR_RATE;
-    totalDollars = laborDollars + totalParts;
+    const partsTax = Math.round(totalParts * SALES_TAX_RATE * 100) / 100;
+    totalDollars = laborDollars + totalParts + partsTax;
+
+    // Insert a sales-tax row right before the total row, only if there are parts
+    if (totalParts > 0) {
+      const taxRow = document.createElement('div');
+      taxRow.className = 'estimate-row';
+      taxRow.innerHTML = `
+        <div class="label">Sales tax (6% on parts)</div>
+        <div class="value">${fmtMoney(partsTax)}</div>
+      `;
+      estimate.insertBefore(taxRow, totalRow);
+    }
 
     // Update total row label based on what was charged
     let totalLabel;
     if (totalHours > 0 && totalParts > 0) {
-      totalLabel = `Total · ${totalHours.toFixed(1)} hr labor (${fmtMoney(laborDollars)}) + ${fmtMoney(totalParts)} parts`;
+      totalLabel = `Total · ${totalHours.toFixed(1)} hr labor (${fmtMoney(laborDollars)}) + ${fmtMoney(totalParts)} parts + tax`;
     } else if (totalParts > 0) {
-      totalLabel = `Total · parts`;
+      totalLabel = `Total · parts + tax`;
     } else {
       totalLabel = `Total estimate · ${totalHours.toFixed(1)} labor hours @ $${LABOR_RATE}/hr`;
     }
