@@ -1333,6 +1333,7 @@
         headers: { 'Accept': 'application/json' }
       });
       if (res.ok) {
+        rememberResponse(ticketId, decision.value);
         showConfirmation(decision.value);
       } else {
         throw new Error('Submission failed (' + res.status + ')');
@@ -1343,6 +1344,65 @@
       showError("Couldn't send your response. Please try again, or call us at (717) 739-9675.");
     }
   });
+
+  // ---------- One-response-per-ticket guard ----------
+  // Persists in this browser's localStorage so re-visiting the link
+  // (e.g. customer reopens the email a few days later) shows the prior
+  // response instead of letting them submit a duplicate.
+  const RESPONSE_STORAGE_PREFIX = 'ycr_quote_response_';
+
+  function getStoredResponse(tid) {
+    if (!tid) return null;
+    try {
+      const raw = localStorage.getItem(RESPONSE_STORAGE_PREFIX + tid);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function rememberResponse(tid, decisionValue) {
+    if (!tid) return;
+    try {
+      localStorage.setItem(
+        RESPONSE_STORAGE_PREFIX + tid,
+        JSON.stringify({ decision: decisionValue, at: new Date().toISOString() })
+      );
+    } catch (_) { /* private mode / quota — silently ignore */ }
+  }
+
+  function formatStoredDate(isoStr) {
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    } catch (_) { return ''; }
+  }
+
+  // If this browser has already submitted a response for this ticket, short-circuit:
+  // hide the decision form and show a "we already got your response" confirmation
+  // with a path to call us if they need to change it.
+  const priorResponse = getStoredResponse(ticketId);
+  if (priorResponse && priorResponse.decision) {
+    showAlreadyResponded(priorResponse.decision, priorResponse.at);
+  }
+
+  function showAlreadyResponded(decisionValue, isoTimestamp) {
+    decisionPanel.style.display = 'none';
+    confirmation.classList.add('show');
+    const dateStr = formatStoredDate(isoTimestamp);
+    const dateClause = dateStr ? ` on ${dateStr}` : '';
+    if (decisionValue === 'APPROVED') {
+      document.getElementById('confirmTitle').textContent = "We already got your approval — thank you!";
+      document.getElementById('confirmBody').textContent =
+        `We received your repair approval${dateClause}. If you need to change anything, please call us at (717) 739-9675.`;
+    } else {
+      document.getElementById('confirmTitle').textContent = "We already got your response.";
+      document.getElementById('confirmBody').textContent =
+        `We received your decision${dateClause}. If you've changed your mind and want us to proceed with the repair, please call us at (717) 739-9675.`;
+    }
+  }
 
   function showConfirmation(value) {
     decisionPanel.style.display = 'none';
